@@ -1,0 +1,242 @@
+//
+//  main.cpp
+//  project 3 3
+//
+//  Created by Wendy Xie on 4/29/16.
+//  Copyright © 2016 CS 31. All rights reserved.
+//
+
+#include <iostream>
+#include <string>
+#include <cctype>
+#include <assert.h>
+
+using namespace std;
+
+bool hasCorrectSyntax(string dance);
+bool isDirection(char d);
+int convertDance(string dance, string& instructions, int& badBeat);
+void Converted1(int m, int k, string dc, string& convertedParsed);
+void Converted2(int m, int k, string dc, string& convertedParsed);
+
+bool hasCorrectSyntax(string dance);
+bool isDirection(char d);
+int convertDance(string dance, string& instructions, int& badBeat);
+void Converted1(int m, int k, string dc, string& convertedParsed);
+void Converted2(int m, int k, string dc, string& convertedParsed);
+
+int main(){
+    string dance;
+    string instructions; // initialize the instructions with whatever content we want
+    int badBeat; //initialize the bad beat with whatever value we want because it is going to be changed
+    int numberReturned; // ^^^ ditto
+    getline(cin, dance);
+    numberReturned = convertDance(dance, instructions, badBeat);
+    cout << "The number returned is " << numberReturned <<endl;
+    if (numberReturned == 1)
+        cout << "Syntatically incorrect" << endl;
+    if (numberReturned == 2 || numberReturned == 4)
+        {
+            cout << "Instruction does not change" << endl;
+            cout << "The bad beat is " << badBeat <<endl;
+        }
+    if (numberReturned == 0)
+        {
+            cout << "Instruciton is " << instructions << endl;
+            cout << "The bad beat does not change" << endl;
+        }
+    if (numberReturned == 3)
+        {
+            cout << "Instruction does not change" << endl;
+            cout << "The bad beat is " << badBeat << endl;
+        }
+}
+
+
+
+int convertDance(string dance, string& instructions, int& badBeat)
+{
+    int m = 0, q = 0, p = 0, totalBeat = 0;
+    string converted, preinstructions;
+    //m is the number of slashes the string should have; q is the number of slashes that are actually there; p is the length of one freeze like 3d/// p is 5; totalBeat is the total beat;
+    
+    if (!hasCorrectSyntax(dance))
+    {
+        // cout << "Syntactically incorrect" << endl;
+        return 1;
+    }
+    else
+        for (int k = 0; k <= dance.size(); k += p)
+    {
+        if(((dance[k]=='1'||dance[k]=='0')&& isDirection(dance[k+1]))
+            ||(dance[k]=='0'&&(dance[k+1]=='0'||dance[k+1]=='1')&& isDirection(dance[k+2])))
+        {
+            badBeat = totalBeat + 1;
+            // cout << "Instruction is " << preinstructions << endl;
+            // cout << "Instruction does not change" << endl;
+            return 3;
+        }
+        //there can not be any 1d/ or 0d/
+        //by plusing p we jump over to the next digit or direction
+        
+        else if (isdigit(dance[k]))
+        {
+            if(isdigit(dance[k+1]))
+            {
+                m = (dance[k]-'0')*10+dance[k+1]-'0';
+                q = 0;
+                for (int n = k+3; n < k+m+3; n++)
+                {
+                    if(dance[n]=='/')
+                        q++;
+                    if (isdigit(dance[n+1])||isDirection(dance[n+1]))
+                        break;
+                }
+                p = q + 3;
+                totalBeat += q;
+                if (q >= m)
+                {
+                    Converted2(m,k,dance,converted);
+                    preinstructions += converted;
+                    continue;
+                }
+                else if(k+q+3 < dance.size())
+                {
+                   // cout << "only of a slash" << endl;
+                   // cout << "Instruction does not change" << endl;
+                    badBeat = totalBeat + 1;
+                   // cout << "The bad beat is " << badBeat <<endl;
+                    return 4;
+                }
+                else
+                {
+                   // cout << "premature" << endl;
+                   // cout << "Instruction does not change" << endl;
+                    badBeat = totalBeat + 1;
+                   // cout << "The bad beat is " << badBeat <<endl;
+                    return 2;
+                }
+            }
+            //^^^if there are two digits before directions
+            
+            else
+            {
+                m = dance[k]-'0';
+                q = 0;
+                for (int n = k+2; n < k+m+2; n++)
+                {
+                    if(dance[n]=='/')
+                        q++;
+                    if (isdigit(dance[n+1])&&!isDirection(dance[n+1]))
+                        break;
+                }
+                p = q + 2;
+                totalBeat += q;
+                // cout << "Let us see if it changes the instructions or not " << preinstructions << endl;
+                if (q >= m)
+                {
+                    Converted1(m, k, dance, converted);
+                    preinstructions += converted;
+                    continue;
+                }
+                else if (k+q+2 < dance.size())
+                {
+                   // cout << "only of a slash" << endl;
+                   // cout << "Instruction does not change" << endl;
+                    badBeat = totalBeat + 1;
+                   // cout << "The bad beat is " << badBeat <<endl;
+                    return 4;
+                }
+                else
+                {
+                   // cout << "premature" << endl;
+                   // cout << "Instruction does not change" << endl;
+                    badBeat = totalBeat + 1;
+                   // cout << "The bad beat is " << badBeat <<endl;
+                    return 2;
+                }
+                //^^^if there are one digit before directions
+            }
+        }
+        else if (isDirection(dance[k]) && dance[k+1] == '/')
+        {
+            p = 2;
+            char lower = tolower(dance[k]);
+            preinstructions = preinstructions + lower;
+            totalBeat += 1;
+        }
+        else if (dance[k] == '/')
+        {
+            p = 1;
+            preinstructions = preinstructions + '.';
+            totalBeat += 1;
+        }
+
+    }
+    // cout << "Instruction is " << instructions << endl;
+    // cout << "The bad beat doesn't change" <<endl;
+    instructions = preinstructions;
+    // ^^^ to make sure the "instructions" is not changed until everything is correct
+    return 0;
+}
+
+bool hasCorrectSyntax(string dance)
+{
+    for (int k = 0; k != dance.size(); k++)
+    {
+        if (isDirection(dance[k]))
+        {
+            if (dance[k+1]=='/')
+                continue;
+            else
+                return false;
+        }
+        
+        if (isdigit(dance[k]))
+        {
+            if (isdigit(dance[k+1]))
+            {
+                if(isDirection(dance[k+2]))
+                    continue;
+                else
+                    return false;
+            }
+            if (isDirection(dance[k+1]))
+                continue;
+        }
+        if (dance[k]=='/')
+        {
+            continue;
+        }
+        else
+            return false;
+    }
+    return true;
+}
+
+bool isDirection(char d)
+{
+    return (toupper(d)=='D'||toupper(d)=='U'||toupper(d)=='L'||toupper(d)=='R');
+}
+
+void Converted2 (int m, int k, string dc, string& convertedParsed)
+{
+    convertedParsed = "";
+    char c = toupper(dc[k+2]);
+    for(int n = 0; n < m; n++)
+    {
+        convertedParsed += c;
+    }
+    // cout << convertedParsed << endl;
+}
+
+void Converted1 (int m, int k, string dc, string& convertedParsed)
+{
+    convertedParsed = "";
+    char c = toupper(dc[k+1]);
+    for(int n = 0; n < m; n++)
+    {
+        convertedParsed += c;
+    }
+    // cout << convertedParsed << endl;
+}
