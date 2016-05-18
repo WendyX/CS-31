@@ -1,0 +1,410 @@
+//
+//  main.cpp
+//  Project 4
+//
+//  Created by Wendy Xie on 5/7/16.
+//  Copyright © 2016 CS 31. All rights reserved.
+//
+
+#include <iostream>
+#include <string>
+#include <cassert>
+
+using namespace std;
+
+int tally(const string a[], int n, string target);
+int findFirst(const string a[], int n, string target);
+bool findFirstSequence(const string a[], int n, string target, int& begin, int& end);
+int positionOfMin(const string a[], int n);
+int moveToEnd(string a[], int n, int pos);
+int moveToBeginning(string a[], int n, int pos);
+int disagree(const string a1[], int n1, const string a2[], int n2);
+int removeDups(string a[], int n);
+bool subsequence(const string a1[], int n1, const string a2[], int n2);
+int mingle(const string a1[], int n1, const string a2[], int n2, string result[], int max);
+
+int divide(string a[], int n, string divider);
+//====================================test============================
+void cout_the_string (string a[], int n);
+
+//====================================main============================
+
+int main()
+{
+    string a1[12] = {"Wendy", "betty", "", "Alex", "Alex", "Tim", "", "fin", "Zack", "Cindy", "evelyn", "afin"};
+    
+    //=================== count the number of certain string
+    
+    assert(tally(a1, 12, "") == 2); //empty string
+    assert(tally(a1, 3, "Tim") == 0); //ends early; no target string among first 3 elements
+    assert(tally(a1, 1, "Wendy") == 1); //position of Wendy is 0, but n is 1
+    assert(tally(a1, 10, "evelyn") == 0); //position of evelyn is 10 but 10 elements only include up to "Cindy"; off by one
+    assert(tally(a1, -10, "Alex") == -1); //n < 0 should return -1
+    assert(tally(a1, 0, "Alex") == 0); //empty array always return to 0
+    
+    //==================== find first target string
+    
+    assert(findFirst(a1, 12, "Alex") == 3); //normal case
+    assert(findFirst(a1, 3, "Tim") == -1); //Tim is not among the first 3 elements
+    assert(findFirst(a1, 12, "Lucy") == -1); //There is no Lucy so return -1
+    assert(findFirst(a1, 0, "Wendy") == -1); //empty array always returns to -1
+    
+    //==================== find the first consecutive sequence and mark its begin and end
+    
+    int bg;
+    int en;
+    assert(findFirstSequence(a1, 12, "Alex", bg, en) && bg == 3 && en == 4); //There are 2 continuous Alex
+    assert(findFirstSequence(a1, 5, "Alex", bg, en) && bg == 3 && en == 4); //When Alex is at the end of the sequence, check if there will be undefined behaviors
+    assert(findFirstSequence(a1, 12, "afin", bg, en) && bg == 11 && en == 11); //When there is only one "fin" and "fin" is at the end of the array
+    assert(findFirstSequence(a1, 12, "", bg, en) && bg == 2 && en == 2); //make sure it return the begin and end of the first target element but not the other ones
+    assert(!findFirstSequence(a1, 0, "", bg, en)); //when n is zero, empty array
+    assert(!findFirstSequence(a1, 5, "fin", bg, en)); //when there is no "fin" in the first 5 elements of the array
+                  
+    //=================== find the position of the minimal string
+    assert(positionOfMin(a1, 12) == 2); //"" is the smallest string, and because there are two "", it should return the smaller position of ""
+                  
+                  
+    string a2[7] = {"Teanna", "Wendy", "Lucy", "Lily", "Tiffany", "Effy", "Ada"};
+    string a3[8] = {"Teanna", "Wendy", "Lucy", "Alex", "Tim", "Alex", "Zack", "Tim"};
+                  assert(positionOfMin(a2, 7) == 6); //"Ada" is the smallest string
+                  assert(positionOfMin(a2, 5) == 3); //When "Ada" is not reached, "Lily" is the smallest
+                  assert(positionOfMin(a3, 8) == 3); //two "Alex"s should return the smaller position
+                  assert(positionOfMin(a3, 0) == -1); //array has no elements
+                  
+    //=================== find the point two string disagree
+                  assert(disagree(a2, 7, a3, 8) == 3); //position 3 is not equal
+                  assert(disagree(a2, 2, a3, 2) == 2); //two arrays are equal up to the position 2(first 3 elements equal), so it should return the smaller of n1 and n2, since n1 and n2 are equal, it should return 2
+                  assert(disagree(a2, 0, a3, 3) == -1); //if there is no elements in the string, there wont be any elements equal
+                  assert(disagree(a2, 5, a3, 0) == -1); // same as above
+                  assert(disagree(a1, 12, a3, 8) == 0); //disagree from the very beginning
+                  
+    //=================== check if the second sequence is the subsequence of the first one
+    string a4[5] = {"Wendy", "Alex", "Tim", "Zack", "Tim"};
+                  assert(subsequence(a3, 8, a4, 3));
+                  assert(subsequence(a1, 12, a4, 4));
+                  assert(subsequence(a1, 1, a4, 0)); //empty sequence should be the subsequence of every sequence
+                  assert(subsequence(a4, 5, a1, 1));
+                  assert(subsequence(a4, 0, a1, 0)); //when both a4 and a1 have no elements; empty array is the subsequence of any array, so it is the subsequence of itself as well
+                  
+    //=================== move string at certain position to the end
+                  string a5[6] = {"", "Tim", "Robert", "Joyce", "Jimmy", "Lee"};
+                  assert(moveToEnd(a5, 6, 4) == 4 && a5[4] == "Lee" && a5[5] == "Jimmy" && a5[0] == "" && a5[1] == "Tim" && a5[2] == "Robert" && a5[3] == "Joyce"); //move the string in the middle
+                  
+                  string a6[6] = {"", "Tim", "Robert", "Joyce", "Jimmy", "Lee"};
+                  assert(moveToEnd(a6, 6, 0) == 0 && a6[0] == "Tim" && a6[1] == "Robert" && a6[2] == "Joyce" && a6[3] == "Jimmy" && a6[4] == "Lee" && a6[5] == ""); //move the first to the end
+                  assert(moveToEnd(a6, 0, 0) == -1); //when array is empty
+                  assert(moveToEnd(a6, 6, -5) == -1); //when the position is undefined
+                  assert(moveToEnd(a6, 6, 6) == -1); //when the position is undefined
+                  
+    //=================== move string at certain position to the beginning
+                  string a7[6] = {"", "Tim", "Robert", "Joyce", "Jimmy", "Lee"};
+                  assert(moveToBeginning(a7, 6, 4) == 4 && a7[0] == "Jimmy" && a7[1] == "" && a7[2] == "Tim" && a7[3] == "Robert" && a7[4] == "Joyce" && a7[5] == "Lee"); //move to the beginning
+                  assert(moveToBeginning(a7, 0, 0) == -1); //when array is empty
+                  assert(moveToBeginning(a7, 6, -5) == -1); //when the position is undefined
+                  assert(moveToBeginning(a7, 6, 6) == -1); //when the position is undefined
+                  
+    //=================== remove duplicates
+                  string a8[10] = { "Jimmy", "Jimmy", "Tim", "Tim", "Robert", "Wendy", "Wendy", "Tim", "Tim", "Robert"};
+                  assert((removeDups(a8, 10)) == 6 && a8[0] == "Jimmy" && a8[1] == "Tim" && a8[2] == "Robert" && a8[3] == "Wendy" && a8[4] == "Tim" && a8[5] == "Robert"); //to see if the function removes the elements that appear multiple times but are not consecutive
+           assert(removeDups(a4, 5) == 5 && a4[0] == "Wendy" && a4[1] == "Alex" && a4[2] == "Tim" && a4[3] == "Zack" && a4[4] == "Tim"); //no duplicate
+           assert(removeDups(a4, 0) == 0); //no elements in array
+           assert(removeDups(a4, -2) == -1); //number of elements can not be negative
+           assert(removeDups(a4, 1) == 1); //only one element, on duplicates are removed
+           
+    //=================== mingle two arrays in alphabetic order
+           string x1[5] = {"Betty", "Dora", "Finn", "Mandy", "Robert"};
+           string y1[4] = {"Betty", "Harry", "Nick", "Wendy"};
+           string z1[10];
+           assert(mingle(x1, 5, y1, 4, z1, 10) == 9 && z1[4] == "Harry"); // normal situation
+           assert(mingle(x1, 5, y1, 4, z1, 8) == -1); //n1 + n2 > max
+           assert(mingle(x1, 0, y1, 0, z1, 10) == 0); //no elements in z1 because both x1 and y1 have no elements
+           assert(mingle(x1, -2, y1, -3, z1, 10) == -1); //number of elements can not be negative
+           
+           string xb[3] = {"Zara", "Yelp", "Wendy’s"};
+           assert(mingle(xb, 3, y1, 4, z1, 10) == -1); //not in alphabetic nondecreasing order
+           
+    //=================== divider
+           string b1[4] = {"Alex", "Mandy", "Harry", "Robert"};
+           string c1[4] = {"October", "November", "December", "June"};
+           assert(divide(b1, 4, "Mandy") == 2 && b1[2] == "Mandy"); //divider is the same as one of the string in the array
+           assert(divide(c1, 4, "July") == 1 && c1[0] == "December"); //divider is not in the array
+           cout << "All tests successes" << endl;
+}
+
+int tally(const string a[], int n, string target)
+{
+    if (n < 0)
+        return -1;
+    
+    int numberOfTarget = 0;
+    string m;
+    for (int k = 0; k < n; k++)
+    {
+        m = a[k];
+        if (a[k] == target)
+            numberOfTarget++;
+    }
+    return numberOfTarget;
+}
+
+int findFirst(const string a[], int n, string target)
+{
+    if (n < 0)
+        return -1;
+    
+    int positionOfTarget = -1;
+    for (int k = 0; k < n; k++)
+        if (a[k] == target)
+        {
+            positionOfTarget = k;
+            break;
+        }
+    return positionOfTarget;
+}
+
+bool findFirstSequence(const string a[], int n, string target, int& begin, int& end)
+{
+    
+    int b = 0;
+    int e = 0;
+    
+    if (n <= 0)
+            return false;
+    else
+    {
+        for (int k = 0; k < n; k++)
+        {
+            if (a[k] == target)
+            {
+                b = k;
+                break;
+            }
+        }
+        
+        for (int k = 0; k < n; k++)
+        {
+            if ((k+1 == n && a[k] == target) || (a[k] == target && a[k+1] !=target)) //k+1 == n && a[k] == target 这个部分忘记了orz
+            {
+                e = k;
+                break;
+            }
+        }
+    }
+        
+    if ( b != 0 || e != 0)
+    {
+        begin = b;
+        end = e;
+        return true;
+    }
+    else
+        return false;
+}
+
+int positionOfMin(const string a[], int n)
+{
+    string beingCompared = "";
+    int k = 0;
+    int position = -1;
+    if (n <= 0)
+        return position;
+    
+    else
+        beingCompared = a[k];
+        position = k;
+        for (int m = k; m < n; m++)
+        {
+            if (beingCompared > a[m])
+            {
+                beingCompared = a[m];
+                position = m;
+            }
+        }
+    return position;
+}
+
+int moveToEnd(string a[], int n, int pos)
+{
+    if (n <= 0|| pos < 0 || pos >= n)
+        return -1;
+    
+    string temporary = "";
+    temporary = a[pos];
+    for (int k = pos; k < n-1 ; k++)
+    {
+        a[k] = a[k+1];
+    }
+    a[n-1] = temporary;
+    return pos;
+}
+
+int moveToBeginning(string a[], int n, int pos)
+{
+    if (n <= 0|| pos < 0 || pos >= n)
+        return -1;
+    
+    string temporary = "";
+    temporary = a[pos];
+    for (int k = pos; k > 0; k--)
+    {
+        a[k] = a[k-1];
+    }
+    a[0] = temporary;
+    return pos;
+}
+
+int disagree(const string a1[], int n1, const string a2[], int n2)
+{
+    if (n1 <= 0|| n2 <= 0)
+        return -1;
+    
+    int size = n1;
+    if (n1 > n2)
+        size = n2;
+    int posOfDisagree = size;
+    for (int k = 0; k < size; k++)
+    {
+        if (a1[k] != a2[k])
+        {
+            posOfDisagree = k;
+            break;
+        }
+    }
+    return posOfDisagree;
+}
+
+int removeDups(string a[], int n)
+{
+    if (n < 0)
+        return -1;
+    if (n == 1 || n == 0)
+        return n;
+    string dups = "";
+    int numberOfDups;
+    int m;
+    int times = 0;
+    for (int k = 0; k < n; k += numberOfDups+1)
+    {
+        numberOfDups = 0;
+        dups = a[k];
+        for (m = k; m < n; m++)
+        {
+            if(a[m+1] == dups)
+                numberOfDups++;
+            else
+                break;
+        }
+        a[times]=a[m];
+        //cout << times << a[times] << endl;
+        times++;
+    }
+    //cout_the_string (a, 9);
+    return times;
+}
+
+bool subsequence(const string a1[], int n1, const string a2[], int n2)
+{
+    if (n1 < 0|| n2 < 0 || n1 < n2)
+        return false;
+    if (n2 == 0)
+        return true;
+    
+    int m2 = 0; int m1 = 0;
+    while (m1 < n1 && m2 < n2)
+        {
+            if (a1[m1] == a2[m2])
+            {
+                m2++;
+            }
+            m1++;
+        }
+    if (m2 == n2)
+        return true;
+    else
+        return false;
+}
+
+int mingle(const string a1[], int n1, const string a2[], int n2, string result[], int max)
+{
+    if (n1 < 0|| n2 < 0 || n1 + n2 > max)
+        return -1;
+    if (n1 == 0 && n2 == 0)
+        return 0;
+
+    for (int k = 0; k < n1-1; k ++)
+    {
+       if (a1[k] <= a1[k+1])
+           continue;
+        else
+            return -1;
+    }
+    
+    for (int k = 0; k < n2-1; k ++)
+    {
+        if (a2[k] <= a2[k+1])
+            continue;
+        else
+            return -1;
+    }
+    
+    int k1 = 0, k2 = 0;
+    for(;k1+k2 <= n1+n2;)
+    {
+        if (k1 < n1 && a1[k1] <= a2[k2])
+            {
+                result [k1+k2] = a1[k1];
+                k1++;
+            }
+        else
+        {
+            result[k1+k2] = a2[k2];
+            k2++;
+        }
+    }
+    return n1+n2;
+}
+
+int divide(string a[], int n, string divider)
+{
+    if (n < 0)
+        return -1;
+    
+    int lessThanDivider;
+    int less = -1;
+    int largerThanDivider = n;
+    string temporary = "";
+    for (int k = 0; k < largerThanDivider;)
+    {
+        if (a[k] < divider)
+        {
+            temporary = a[k];
+            less ++;
+            a[k] = a[less];
+            a[less] = temporary;
+            k++; //make sure it won't test the thing it has already tested
+            
+        }
+        else if (a[k] > divider)
+        {
+            temporary = a[k];
+            largerThanDivider --;
+            a[k] = a[largerThanDivider];
+            a[largerThanDivider] = temporary;
+        }
+        else
+        {
+            k++; // if a[k] == divider; it is hard to find
+        }
+    }
+    lessThanDivider = less + 1;
+    return lessThanDivider;
+}
+
+//=====================================test=====================
+//void cout_the_string (string a[], int n)
+//{
+//    for (int k = 0; k < n; k++)
+//    {
+//        cout << a[k] << endl;
+//    }
+//}
